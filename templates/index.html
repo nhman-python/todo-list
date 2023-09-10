@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>רשימת משימות</title>
+    <!-- Link to Bootstrap CSS -->
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <style>
+        /* CSS for completed ToDo items */
+        .completed {
+            text-decoration: line-through;
+        }
+
+        /* Custom style for timestamps */
+        .timestamp {
+            color: #007bff; /* Blue color for timestamps */
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-5">
+    <h1 class="mb-4">רשימת משימות</h1>
+
+    <!-- Display flash messages -->
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="alert alert-info">
+        <ul class="list-unstyled">
+            {% for message in messages %}
+            <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- Form to create a new ToDo -->
+    <form method="POST" action="{{ url_for('create_todos') }}" class="mb-4">
+        {{ form.hidden_tag() }}
+        <div class="form-row">
+            <div class="col-md-8 mb-3">
+                {{ form.text.label }}
+                {{ form.text(class="form-control", id="text") }}
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="form-check">
+                    {{ form.done(class="form-check-input", id="done") }}
+                    <label class="form-check-label" for="done">הושלם</label>
+                </div>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">הוסף משימה</button>
+    </form>
+
+    <!-- List of ToDos -->
+    <ul class="list-group">
+        {% if todo_list %}
+        {% for todo in todo_list %}
+        <li class="list-group-item d-flex justify-content-between align-items-center {% if todo.done %}completed{% endif %}">
+            <div>
+                {% if todo.done %}
+                <s>{{ todo.text }}</s>
+                {% else %}
+                {{ todo.text }}
+                {% endif %}
+            </div>
+            <div class="text-right">
+                {% if todo.create_at and todo.last_edit %}
+                <span class="timestamp">נערך לאחרונה: {{ todo.last_edit }}</span><br>
+                {% else %}
+                <span class="timestamp">{{ todo.create_at }}</span>
+                {% endif %}
+                <a class="btn btn-secondary btn-sm ml-2" href="{{ url_for('edit_todo', todo_id=todo.id) }}">ערוך</a>
+                <!-- Changed the button to an anchor element -->
+                <form method="POST" action="{{ url_for('delete_todo_list', todo_id=todo.id) }}"
+                      style="display: inline;">
+                    {{ form.hidden_tag() }}
+                    <button type="submit" class="btn btn-danger btn-sm ml-2">מחק</button>
+                </form>
+                <form method="POST" action="{{ url_for('mark_done', todo_id=todo.id) }}" style="display: inline;">
+                    {{ form.hidden_tag() }}
+                    <button type="submit" class="btn btn-success btn-sm ml-2">
+                        {% if not todo.done %}סיים משימה{% else %}המשימה הושלמה{% endif %}
+                    </button>
+                </form>
+            </div>
+        </li>
+        {% endfor %}
+        {% else %}
+        <li class="list-group-item">אין משימות</li>
+        {% endif %}
+    </ul>
+
+</div>
+
+<!-- Modal for editing a to-do item -->
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">עריכת משימה</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="סגור">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm" method="POST" action="">
+                    {{ form.hidden_tag() }}
+                    <div class="form-group">
+                        <label for="editText">ערוך משימה:</label>
+                        {{ form.text.label }}
+                        {{ form.text(class="form-control", id="editText") }}
+                    </div>
+                    <button type="submit" class="btn btn-primary">שמור</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Link to Bootstrap JS and jQuery -->
+<script src="{{ url_for('static', filename='js/bootstrap.bundle.js') }}"></script>
+<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+
+</body>
+</html>
