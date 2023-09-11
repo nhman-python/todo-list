@@ -1,8 +1,8 @@
 from typing import Any
+from datetime import datetime
 from module import db, ToDo, CreateNewForm, MarkDone, UpdateTodoForm
 from flask import Flask, render_template, redirect, url_for, flash, request, abort
-from flask_talisman import Talisman
-from datetime import datetime
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///todo.db'
