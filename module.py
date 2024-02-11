@@ -1,7 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, BooleanField
-from wtforms.validators import DataRequired, Length
+from wtforms.validators import InputRequired, Length
 
 db = SQLAlchemy()
 
@@ -15,13 +15,13 @@ class ToDo(db.Model):
 
 
 class CreateNewForm(FlaskForm):
-    text = StringField('הערה חדשה:', validators=[DataRequired(), Length(min=1, max=1000)])
+    text = StringField('הערה חדשה:', validators=[InputRequired(), Length(min=1, max=1000)])
     done = BooleanField('done')
     submit = SubmitField('submit')
 
 
 class UpdateTodoForm(FlaskForm):
-    text = StringField('עידכון הערה:', validators=[DataRequired(), Length(min=1, max=1000)])
+    text = StringField('עידכון הערה:', validators=[InputRequired(), Length(min=1, max=1000)])
     submit = SubmitField('submit')
 
 

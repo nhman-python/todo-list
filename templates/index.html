@@ -4,124 +4,113 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>רשימת משימות</title>
-    <!-- Link to Bootstrap CSS -->
-    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* CSS for completed ToDo items */
-        .completed {
-            text-decoration: line-through;
+        .container {
+            margin-top: 50px;
         }
-
-        /* Custom style for timestamps */
-        .timestamp {
-            color: #007bff; /* Blue color for timestamps */
+        .title {
+            margin-bottom: 40px;
+        }
+        .list-group-item {
+            justify-content: flex-start;
+            align-items: center;
+            padding: 1rem;
+        }
+        .list-group-item .btn-group {
+            margin-left: auto;
+        }
+        .list-group-item .fw-bold {
+            margin-bottom: 5px;
+            display: block;
+        }
+        .list-group-item small {
+            display: block;
+        }
+        .list-group-item.completed .fw-bold {
+            text-decoration: line-through;
+            color: #6c757d;
+        }
+        .list-group-item.completed small {
+            color: #6c757d;
         }
     </style>
 </head>
 <body>
-<div class="container mt-5">
-    <h1 class="mb-4">רשימת משימות</h1>
+<div class="container">
+    <h1 class="title is-1">רשימת משימות</h1>
 
     <!-- Display flash messages -->
     {% with messages = get_flashed_messages() %}
-    {% if messages %}
-    <div class="alert alert-info">
-        <ul class="list-unstyled">
-            {% for message in messages %}
-            <li>{{ message }}</li>
-            {% endfor %}
-        </ul>
-    </div>
-    {% endif %}
+        {% if messages %}
+            <div class="alert alert-info">
+                <ul>
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
     {% endwith %}
 
     <!-- Form to create a new ToDo -->
-    <form method="POST" action="{{ url_for('create_todos') }}" class="mb-4">
+    <form method="POST" action="{{ url_for('create_new_todo') }}" class="mb-4">
         {{ form.hidden_tag() }}
-        <div class="form-row">
-            <div class="col-md-8 mb-3">
-                {{ form.text.label }}
-                {{ form.text(class="form-control", id="text") }}
+        <div class="row align-items-center mb-3">
+            <div class="col">
+                <label for="text" class="form-label">הוסף משימה:</label>
+                {{ form.text(class="form-control", placeholder="הזן הערה", id="text") }}
             </div>
-            <div class="col-md-4 mb-3">
+            <div class="col-auto">
                 <div class="form-check">
-                    {{ form.done(class="form-check-input", id="done") }}
+                    <input type="checkbox" class="form-check-input" id="done" name="done">
                     <label class="form-check-label" for="done">הושלם</label>
                 </div>
             </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">הוסף</button>
+            </div>
         </div>
-        <button type="submit" class="btn btn-primary">הוסף משימה</button>
     </form>
 
-    <!-- List of ToDos -->
-    <ul class="list-group">
-        {% if todo_list %}
-        {% for todo in todo_list %}
-        <li class="list-group-item d-flex justify-content-between align-items-center {% if todo.done %}completed{% endif %}">
-            <div>
-                {% if todo.done %}
-                <s>{{ todo.text }}</s>
-                {% else %}
-                {{ todo.text }}
-                {% endif %}
-            </div>
-            <div class="text-right">
-                {% if todo.create_at and todo.last_edit %}
-                <span class="timestamp">נערך לאחרונה: {{ todo.last_edit }}</span><br>
-                {% else %}
-                <span class="timestamp">{{ todo.create_at }}</span>
-                {% endif %}
-                <a class="btn btn-secondary btn-sm ml-2" href="{{ url_for('edit_todo', todo_id=todo.id) }}">ערוך</a>
-                <!-- Changed the button to an anchor element -->
-                <form method="POST" action="{{ url_for('delete_todo_list', todo_id=todo.id) }}"
-                      style="display: inline;">
-                    {{ form.hidden_tag() }}
-                    <button type="submit" class="btn btn-danger btn-sm ml-2">מחק</button>
-                </form>
-                <form method="POST" action="{{ url_for('mark_done', todo_id=todo.id) }}" style="display: inline;">
-                    {{ form.hidden_tag() }}
-                    <button type="submit" class="btn btn-success btn-sm ml-2">
-                        {% if not todo.done %}סיים משימה{% else %}המשימה הושלמה{% endif %}
-                    </button>
-                </form>
-            </div>
-        </li>
-        {% endfor %}
-        {% else %}
-        <li class="list-group-item">אין משימות</li>
-        {% endif %}
-    </ul>
-
+    <!-- Section list for all the items of the todo list -->
+    <section class="section">
+        <ul class="list-group">
+            {% if todo_list %}
+            {% for todo in todo_list %}
+            <li class="list-group-item {% if todo.done %}completed{% endif %}">
+                <div>
+                    <span class="fw-bold">{{ todo.text }}</span>
+                    <small>{% if todo.last_edit %}נערך לאחרונה: {{ todo.last_edit }}{% else %}נוצר: {{ todo.create_at }}{% endif %}</small>
+                </div>
+                <div class="btn-group" role="group">
+                    <a href="{{ url_for('edit_todo', todo_id=todo.id) }}" class="btn btn-outline-secondary"><i class="fas fa-edit"></i> עריכה</a>
+                    <form id="deleteForm_{{ todo.id }}" method="POST" action="{{ url_for('delete_todo', todo_id=todo.id) }}">
+                        {{ form.hidden_tag() }}
+                        <button type="button" onclick="confirmDelete({{ todo.id }})" class="btn btn-outline-danger"><i class="fas fa-trash-alt"></i> מחיקה</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('mark_todo_done', todo_id=todo.id) }}">
+                        {{ form.hidden_tag() }}
+                        <button type="submit" class="btn btn-outline-success">{% if not todo.done %}<i class="fas fa-check"></i> סימון כהושלם{% else %}<i class="fas fa-undo"></i> ביטול סימון{% endif %}</button>
+                    </form>
+                </div>
+            </li>
+            {% endfor %}
+            {% else %}
+            <li class="list-group-item">אין משימות</li>
+            {% endif %}
+        </ul>
+    </section>
 </div>
 
-<!-- Modal for editing a to-do item -->
-<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editModalLabel">עריכת משימה</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="סגור">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="editForm" method="POST" action="">
-                    {{ form.hidden_tag() }}
-                    <div class="form-group">
-                        <label for="editText">ערוך משימה:</label>
-                        {{ form.text.label }}
-                        {{ form.text(class="form-control", id="editText") }}
-                    </div>
-                    <button type="submit" class="btn btn-primary">שמור</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Link to Bootstrap JS and jQuery -->
-<script src="{{ url_for('static', filename='js/bootstrap.bundle.js') }}"></script>
-<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script>
+    function confirmDelete(todoId) {
+        if (confirm("האם אתה בטוח שברצונך למחוק את המשימה?")) {
+            document.getElementById('deleteForm_' + todoId).submit();
+        }
+    }
+</script>
 </body>
 </html>
